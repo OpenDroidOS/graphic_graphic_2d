@@ -701,7 +701,7 @@ napi_value FilterNapi::EllipticalGradientBlur(napi_env env, napi_callback_info i
     thisFilter->AddEffectFilter(ellipticalGradientBlur);
 
 #ifndef CROSS_PLATFORM
-    HISTOGRAM_BOOLEAN("Arkgraphics2d.EffectKit.ellipticalGradientBlur", 1);
+    API_STATS_HISTOGRAM("Arkgraphics2d.EffectKit.ellipticalGradientBlur", 1);
 #endif
     return _this;
 }
@@ -737,7 +737,7 @@ napi_value FilterNapi::Brightness(napi_env env, napi_callback_info info)
     thisFilter->AddEffectFilter(brightness);
 
 #ifndef CROSS_PLATFORM
-    HISTOGRAM_BOOLEAN("Arkgraphics2d.EffectKit.brightness", 1);
+    API_STATS_HISTOGRAM("Arkgraphics2d.EffectKit.brightness", 1);
 #endif
     return _this;
 }
@@ -758,7 +758,7 @@ napi_value FilterNapi::Grayscale(napi_env env, napi_callback_info info)
     thisFilter->AddEffectFilter(grayscale);
 
 #ifndef CROSS_PLATFORM
-    HISTOGRAM_BOOLEAN("Arkgraphics2d.EffectKit.grayscale", 1);
+    API_STATS_HISTOGRAM("Arkgraphics2d.EffectKit.grayscale", 1);
 #endif
     return _this;
 }
@@ -779,7 +779,7 @@ napi_value FilterNapi::Invert(napi_env env, napi_callback_info info)
     thisFilter->AddEffectFilter(invert);
 
 #ifndef CROSS_PLATFORM
-    HISTOGRAM_BOOLEAN("Arkgraphics2d.EffectKit.invert", 1);
+    API_STATS_HISTOGRAM("Arkgraphics2d.EffectKit.invert", 1);
 #endif
     return _this;
 }
@@ -845,7 +845,7 @@ napi_value FilterNapi::SetColorMatrix(napi_env env, napi_callback_info info)
     thisFilter->AddEffectFilter(applyColorMatrix);
 
 #ifndef CROSS_PLATFORM
-    HISTOGRAM_BOOLEAN("Arkgraphics2d.EffectKit.setColorMatrix", 1);
+    API_STATS_HISTOGRAM("Arkgraphics2d.EffectKit.setColorMatrix", 1);
 #endif
     return _this;
 }

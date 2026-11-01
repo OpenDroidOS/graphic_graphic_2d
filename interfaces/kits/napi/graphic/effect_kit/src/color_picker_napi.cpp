@@ -510,7 +510,7 @@ napi_value ColorPickerNapi::CreateColorPicker(napi_env env, napi_callback_info i
         EFFECT_LOG_E("ColorPickerNapi CreateColorPicker creating async work fail");
     }
 #ifndef CROSS_PLATFORM
-    HISTOGRAM_BOOLEAN("Arkgraphics2d.EffectKit.createColorPicker", 1);
+    API_STATS_HISTOGRAM("Arkgraphics2d.EffectKit.createColorPicker", 1);
 #endif
     return result;
 }
@@ -609,7 +609,7 @@ napi_value ColorPickerNapi::GetMainColor(napi_env env, napi_callback_info info)
     }
 
 #ifndef CROSS_PLATFORM
-    HISTOGRAM_BOOLEAN("Arkgraphics2d.EffectKit.getMainColor", 1);
+    API_STATS_HISTOGRAM("Arkgraphics2d.EffectKit.getMainColor", 1);
 #endif
     return result;
 }
@@ -687,7 +687,7 @@ napi_value ColorPickerNapi::GetMainColorSync(napi_env env, napi_callback_info in
     }
 
 #ifndef CROSS_PLATFORM
-    HISTOGRAM_BOOLEAN("Arkgraphics2d.EffectKit.getMainColorSync", 1);
+    API_STATS_HISTOGRAM("Arkgraphics2d.EffectKit.getMainColorSync", 1);
 #endif
     return result;
 }
@@ -722,7 +722,7 @@ napi_value ColorPickerNapi::GetLargestProportionColor(napi_env env, napi_callbac
     }
 
 #ifndef CROSS_PLATFORM
-    HISTOGRAM_BOOLEAN("Arkgraphics2d.EffectKit.getLargestProportionColor", 1);
+    API_STATS_HISTOGRAM("Arkgraphics2d.EffectKit.getLargestProportionColor", 1);
 #endif
     return result;
 }
@@ -756,7 +756,7 @@ napi_value ColorPickerNapi::GetHighestSaturationColor(napi_env env, napi_callbac
     }
 
 #ifndef CROSS_PLATFORM
-    HISTOGRAM_BOOLEAN("Arkgraphics2d.EffectKit.getHighestSaturationColor", 1);
+    API_STATS_HISTOGRAM("Arkgraphics2d.EffectKit.getHighestSaturationColor", 1);
 #endif
     return result;
 }
@@ -790,7 +790,7 @@ napi_value ColorPickerNapi::GetAverageColor(napi_env env, napi_callback_info inf
     }
 
 #ifndef CROSS_PLATFORM
-    HISTOGRAM_BOOLEAN("Arkgraphics2d.EffectKit.getAverageColor", 1);
+    API_STATS_HISTOGRAM("Arkgraphics2d.EffectKit.getAverageColor", 1);
 #endif
     return result;
 }
@@ -826,7 +826,7 @@ napi_value ColorPickerNapi::IsBlackOrWhiteOrGrayColor(napi_env env, napi_callbac
     napi_get_boolean(env, rst, &result);
 
 #ifndef CROSS_PLATFORM
-    HISTOGRAM_BOOLEAN("Arkgraphics2d.EffectKit.isBlackOrWhiteOrGrayColor", 1);
+    API_STATS_HISTOGRAM("Arkgraphics2d.EffectKit.isBlackOrWhiteOrGrayColor", 1);
 #endif
     return result;
 }
@@ -1087,7 +1087,7 @@ napi_value ColorPickerNapi::GetTopProportionColors(napi_env env, napi_callback_i
     }
 
 #ifndef CROSS_PLATFORM
-    HISTOGRAM_BOOLEAN("Arkgraphics2d.EffectKit.getTopProportionColors", 1);
+    API_STATS_HISTOGRAM("Arkgraphics2d.EffectKit.getTopProportionColors", 1);
 #endif
     return arrayValue;
 }
@@ -1145,7 +1145,7 @@ napi_value ColorPickerNapi::GetTopProportionColorsAndPercentage(napi_env env, na
     }
 
 #ifndef CROSS_PLATFORM
-    HISTOGRAM_BOOLEAN("Arkgraphics2d.EffectKit.getTopProportionColorsAndPercentage", 1);
+    API_STATS_HISTOGRAM("Arkgraphics2d.EffectKit.getTopProportionColorsAndPercentage", 1);
 #endif
     return mapNapiValue;
 }
@@ -1181,7 +1181,7 @@ napi_value ColorPickerNapi::ComplexityDegree(napi_env env, napi_callback_info in
     }
 
 #ifndef CROSS_PLATFORM
-    HISTOGRAM_BOOLEAN("Arkgraphics2d.EffectKit.getComplexityDegree", 1);
+    API_STATS_HISTOGRAM("Arkgraphics2d.EffectKit.getComplexityDegree", 1);
 #endif
     return result;
 }
@@ -1217,7 +1217,7 @@ napi_value ColorPickerNapi::ShadeDegree(napi_env env, napi_callback_info info)
     }
 
 #ifndef CROSS_PLATFORM
-    HISTOGRAM_BOOLEAN("Arkgraphics2d.EffectKit.getShadeDegree", 1);
+    API_STATS_HISTOGRAM("Arkgraphics2d.EffectKit.getShadeDegree", 1);
 #endif
     return result;
 }
@@ -1247,7 +1247,7 @@ napi_value ColorPickerNapi::GetAlphaZeroTransparentProportion(napi_env env, napi
         EFFECT_LOG_E("ColorPickerNapi GetFullyTransparentProportion create map fail"));
 
 #ifndef CROSS_PLATFORM
-    HISTOGRAM_BOOLEAN("Arkgraphics2d.EffectKit.getAlphaZeroTransparentProportion", 1);
+    API_STATS_HISTOGRAM("Arkgraphics2d.EffectKit.getAlphaZeroTransparentProportion", 1);
 #endif
     return percentageValue;
 }
