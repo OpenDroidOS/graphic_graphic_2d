@@ -27,6 +27,7 @@
 #include <securec.h>
 #include <cstring>
 #include <cinttypes>
+#include <fcntl.h>
 #include <refbase.h>
 
 #include <vulkan/vulkan_core.h>
@@ -1018,6 +1019,22 @@ VKAPI_ATTR VkResult VKAPI_CALL GetSwapchainImagesKHR(
     return result;
 }
 
+static VkResult AcquireSwapchainImage(VkDevice device, VkLayerDispatchTable& dispatch, Swapchain::Image& image,
+    VkSemaphore semaphore, VkFence fence)
+{
+    int fenceDup = -1;
+    if (image.requestFence >= 0) {
+        fenceDup = fcntl(image.requestFence, F_DUPFD_CLOEXEC, 0);
+        if (fenceDup < 0) {
+            SWLOGE("dup NativeWindow requested fencefd failed");
+            return VK_ERROR_OUT_OF_HOST_MEMORY;
+        }
+    }
+    // AcquireImageOHOS owns the duplicate on both success and failure. Keep the
+    // original request fence for cancellation until presentation releases it.
+    return dispatch.AcquireImageOHOS(device, image.image, fenceDup, semaphore, fence);
+}
+
 VKAPI_ATTR VkResult VKAPI_CALL AcquireNextImageKHR(VkDevice device, VkSwapchainKHR swapchainHandle,
     uint64_t timeout, VkSemaphore semaphore, VkFence vkFence, uint32_t* imageIndex)
 {
@@ -1032,9 +1049,12 @@ VKAPI_ATTR VkResult VKAPI_CALL AcquireNextImageKHR(VkDevice device, VkSwapchainK
 
     LayerData* deviceLayerData = GetLayerDataPtr(GetDispatchKey(device));
     if (swapchain.shared) {
-        *imageIndex = 0;
-        return deviceLayerData->deviceDispatchTable->AcquireImageOHOS(device, swapchain.images[*imageIndex].image, -1,
-                                                                      semaphore, vkFence);
+        result = AcquireSwapchainImage(device, *deviceLayerData->deviceDispatchTable,
+            swapchain.images[0], semaphore, vkFence);
+        if (result == VK_SUCCESS) {
+            *imageIndex = 0;
+        }
+        return result;
     }
 
     NativeWindowBuffer* nativeWindowBuffer = nullptr;
@@ -1064,26 +1084,16 @@ VKAPI_ATTR VkResult VKAPI_CALL AcquireNextImageKHR(VkDevice device, VkSwapchainK
         SwapchainCloseFd(fence);
         return VK_ERROR_OUT_OF_DATE_KHR;
     }
-    int fenceDup = -1;
-    if (fence != -1) {
-        fenceDup = ::dup(fence);
-        if (fenceDup == -1) {
-            SWLOGE("dup NativeWindow requested fencefd failed, wait for signalled");
-            sptr<OHOS::SyncFence> syncFence = new OHOS::SyncFence(fence);
-            fence = -1;
-            syncFence->Wait(-1);
-        }
-    }
-    // in vkAcquireImageOHOS should close fenceDup fd
-    result = deviceLayerData->deviceDispatchTable->AcquireImageOHOS(device, swapchain.images[index].image, fenceDup,
-                                                                    semaphore, vkFence);
+    result = AcquireSwapchainImage(device, *deviceLayerData->deviceDispatchTable,
+        swapchain.images[index], semaphore, vkFence);
     if (result != VK_SUCCESS) {
-        if (NativeWindowCancelBuffer(nativeWindow, nativeWindowBuffer) != OHOS::GSERROR_OK) {
+        ret = NativeWindowCancelBuffer(nativeWindow, nativeWindowBuffer);
+        if (ret != OHOS::GSERROR_OK) {
             SWLOGE("NativeWindowCancelBuffer failed: (%{public}d)", ret);
+            return VK_ERROR_SURFACE_LOST_KHR;
         }
         swapchain.images[index].requested = false;
-        swapchain.images[index].requestFence = -1;
-        SwapchainCloseFd(fence);
+        SwapchainCloseFd(swapchain.images[index].requestFence);
         return result;
     }
 
