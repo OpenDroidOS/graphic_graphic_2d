@@ -183,6 +183,10 @@ private:
     };
     BufferProperties bufferProperties_;
     BufferProperties preBufferProperties_;
+
+    // A failed queue return must finish before another buffer is acquired.
+    sptr<SurfaceBuffer> pendingReleaseBuffer_ = nullptr;
+    sptr<SyncFence> pendingReleaseFence_ = nullptr;
 };
 
 class SurfaceImageListener : public IBufferConsumerListener {

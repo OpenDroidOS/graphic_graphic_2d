@@ -44,6 +44,23 @@ static int GetProcessUniqueId()
     static std::atomic<int> counter { 0 };
     return counter.fetch_add(1, std::memory_order_relaxed);
 }
+
+static SurfaceError ReleasePendingBuffer(ConsumerSurface& surface, sptr<SurfaceBuffer>& buffer,
+                                        sptr<SyncFence>& fence)
+{
+    if (buffer == nullptr) {
+        return SURFACE_ERROR_OK;
+    }
+    SurfaceError ret = surface.ReleaseBuffer(buffer, fence);
+    // A queue cache reset has already retired this slot.
+    if (ret != SURFACE_ERROR_OK && ret != SURFACE_ERROR_BUFFER_NOT_INCACHE) {
+        BLOGE("Release pending buffer failed: %{public}d", ret);
+        return ret;
+    }
+    buffer = nullptr;
+    fence = nullptr;
+    return SURFACE_ERROR_OK;
+}
 }
 
 SurfaceImage::SurfaceImage(uint32_t textureId, uint32_t textureTarget)
@@ -134,10 +151,8 @@ void SurfaceImage::UpdateSurfaceInfo(sptr<SurfaceBuffer> buffer, const sptr<Sync
             currentSurfaceBuffer_, bufferProperties_.transformType, bufferProperties_.crop);
     }
 
-    // wait on this acquireFence.
-    if (acquireFence != nullptr) {
-        acquireFence->Wait(-1);
-    }
+    // The acquire fence is checked before importing or binding the new image.
+    (void)acquireFence;
 }
 
 Rect SurfaceImage::GetBufferCropRegion(const sptr<OHOS::SurfaceBuffer>& buffer)
@@ -160,6 +175,11 @@ SurfaceError SurfaceImage::UpdateSurfaceImage()
 
     // validate egl state
     SurfaceError ret = ValidateEglState();
+    if (ret != SURFACE_ERROR_OK) {
+        return ret;
+    }
+
+    ret = ReleasePendingBuffer(*this, pendingReleaseBuffer_, pendingReleaseFence_);
     if (ret != SURFACE_ERROR_OK) {
         return ret;
     }
@@ -187,6 +207,14 @@ SurfaceError SurfaceImage::UpdateSurfaceImage()
         if (returnValue.damages.size() != 0) {
             damage = returnValue.damages.at(0);
         }
+    }
+
+    if (acquireFence != nullptr && acquireFence->IsValid() && acquireFence->Wait(-1) != 0) {
+        BLOGE("Acquire fence wait failed, uniqueId: %{public}" PRIu64 ".", uniqueId_);
+        pendingReleaseBuffer_ = buffer;
+        pendingReleaseFence_ = acquireFence;
+        ret = ReleasePendingBuffer(*this, pendingReleaseBuffer_, pendingReleaseFence_);
+        return ret == SURFACE_ERROR_OK ? SURFACE_ERROR_API_FAILED : ret;
     }
 
     ret = UpdateEGLImageAndTexture(buffer);
@@ -481,6 +509,10 @@ SurfaceError SurfaceImage::AcquireNativeWindowBuffer(OHNativeWindowBuffer** nati
         return SURFACE_ERROR_INVALID_PARAM;
     }
     std::lock_guard<std::mutex> lockGuard(opMutex_);
+    SurfaceError releaseRet = ReleasePendingBuffer(*this, pendingReleaseBuffer_, pendingReleaseFence_);
+    if (releaseRet != SURFACE_ERROR_OK) {
+        return releaseRet;
+    }
     sptr<SurfaceBuffer> buffer = nullptr;
     sptr<SyncFence> acquireFence = SyncFence::InvalidFence();
     int64_t timestamp;
@@ -594,6 +626,11 @@ SurfaceError SurfaceImage::ReleaseTextImage()
 
     // validate egl state
     SurfaceError ret = ValidateEglState();
+    if (ret != SURFACE_ERROR_OK) {
+        return ret;
+    }
+
+    ret = ReleasePendingBuffer(*this, pendingReleaseBuffer_, pendingReleaseFence_);
     if (ret != SURFACE_ERROR_OK) {
         return ret;
     }
